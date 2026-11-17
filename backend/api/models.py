@@ -1,6 +1,28 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+
+
+class UsuarioManager(BaseUserManager):
+    """
+    Manager personalizado para manejar la creación de usuarios y superusuarios 
+    utilizando el email como identificador único en lugar del username.
+    """
+    def create_user(self, email, nombre_completo, password=None, **extra_fields):
+        if not email:
+            raise ValueError('El correo electrónico es obligatorio')
+        email = self.normalize_email(email)
+        user = self.model(email=email, nombre_completo=nombre_completo, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, nombre_completo, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('rol', 'ADMIN')
+        
+        return self.create_user(email, nombre_completo, password, **extra_fields)
 
 
 class Usuario(AbstractUser):
@@ -8,7 +30,7 @@ class Usuario(AbstractUser):
     Extiende AbstractUser de Django para usar el email como identificador único 
     de login e incorpora el sistema de roles requerido por la prueba.
     """
-    username = None  # Se elimina el username tradicional; el login opera por email.
+    username = None  # Se elimina el username tradicional
     email = models.EmailField(unique=True, error_messages={'unique': "Ya existe un usuario con este correo."})
     nombre_completo = models.CharField(max_length=255)
     
@@ -21,8 +43,13 @@ class Usuario(AbstractUser):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     activo = models.BooleanField(default=True)
 
+    # Indicamos que el campo de login es el email
     USERNAME_FIELD = 'email'
+    # Campos requeridos al crear un superusuario por comandos (sin contar email y password)
     REQUIRED_FIELDS = ['nombre_completo']
+
+    # Asignamos nuestro manager personalizado
+    objects = UsuarioManager()
 
     def __str__(self):
         return f"{self.email} ({self.rol})"
@@ -127,7 +154,7 @@ class Portafolio(models.Model):
     es_publico = models.BooleanField(default=False, help_text="Visible para otros usuarios[cite: 3]")
 
     class Meta:
-        # Restricción. Un mismo usuario no puede repetir nombres de portafolios.
+        # Restricción: Un mismo usuario no puede repetir nombres de portafolios.
         constraints = [
             models.UniqueConstraint(fields=['usuario', 'nombre'], name='unique_portafolio_usuario_nombre')
         ]
