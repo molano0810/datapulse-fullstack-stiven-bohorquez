@@ -2,7 +2,7 @@ import requests
 import logging
 from datetime import datetime
 from django.db import transaction
-from .models import Pais, IndicadorEconomico, TipoCambio, LogActividad
+from .models import Pais, IndicadorEconomico, TipoCambio, Alerta, LogActividad
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +89,15 @@ class ExternalDataSyncService:
                         logger.warning(f"Advertencia de red con World Bank para el lote ({local_type}): {str(e)}")
                         continue
 
+                # Regla 9 (Punto 1.4): Generar alerta INFO cuando haya nuevos datos económicos tras sincronizar
+                if sincronizados_count > 0:
+                    Alerta.objects.create(
+                        tipo_alerta='INDICADOR',
+                        severidad='INFO',
+                        titulo="Sincronización de Indicadores Completada",
+                        mensaje=f"Se actualizaron {sincronizados_count} registros macroeconómicos desde el Banco Mundial."
+                    )
+
                 if usuario:
                     LogActividad.objects.create(
                         usuario=usuario,
@@ -117,7 +126,6 @@ class ExternalDataSyncService:
 
             data = response.json()
             rates = data.get('rates', {})
-            fecha_str = data.get('time_last_update_utc') # o fecha actual por defecto
             fecha_actual = datetime.now().date()
 
             paises = Pais.objects.filter(activo=True)
@@ -130,9 +138,7 @@ class ExternalDataSyncService:
                         # Si la moneda es USD, la tasa es 1.0; de lo contrario, extraemos de rates
                         tasa_usd = 1.0 if moneda == 'USD' else float(rates.get(moneda, 1.0))
                         
-                        # Invertimos o ajustamos según la base USD de ExchangeRate-API (1 USD = X Moneda local)
-                        # ExchangeRate-API da 1 USD = X Moneda. Para guardar tasa local/USD calculamos el inverso si es necesario,
-                        # o guardamos la tasa directa devuelta por el servicio base.
+                        # Convertimos la base USD (1 USD = X Moneda local) a tasa local/USD
                         tasa_registro = 1.0 / tasa_usd if moneda != 'USD' and tasa_usd > 0 else 1.0
 
                         # Buscamos el registro anterior para calcular la variación porcentual
@@ -153,6 +159,16 @@ class ExternalDataSyncService:
                             }
                         )
                         actualizados_count += 1
+
+                        # Regla 8 (Punto 1.4): Generar alerta WARNING si la variación diaria supera el 3%
+                        if abs(variacion) > 3.0:
+                            Alerta.objects.create(
+                                pais=pais,
+                                tipo_alerta='TIPO_CAMBIO',
+                                severidad='WARNING',
+                                titulo=f"Alta Variación Cambiaria en {pais.nombre} ({moneda})",
+                                mensaje=f"La moneda {moneda} presentó una variación diaria del {round(variacion, 2)}% frente al USD."
+                            )
 
                 if usuario:
                     LogActividad.objects.create(

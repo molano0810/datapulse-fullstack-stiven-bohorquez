@@ -12,6 +12,32 @@ from .serializers import (
     TipoCambioSerializer, PortafolioSerializer, PosicionSerializer,
     IndiceRiesgoSerializer, AlertaSerializer, LogActividadSerializer
 )
+from .services_irpc import IRPCService
+
+from rest_framework import generics
+from rest_framework.views import APIView
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import CustomTokenObtainPairSerializer
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    """POST /api/auth/login/ - Autentica al usuario y retorna access + refresh tokens."""
+    serializer_class = CustomTokenObtainPairSerializer
+
+
+class RegisterView(generics.CreateAPIView):
+    """POST /api/auth/register/ - Registro de nuevos usuarios."""
+    queryset = Usuario.objects.all()
+    serializer_class = UsuarioSerializer
+    permission_classes = [permissions.AllowAny]
+
+
+class PerfilUsuarioView(APIView):
+    """GET /api/auth/me/ - Retorna los datos del usuario autenticado mediante el Bearer Token."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        serializer = UsuarioSerializer(request.user)
+        return Response(serializer.data)
 
 
 class EsAdminOReadOnly(permissions.BasePermission):
@@ -124,29 +150,104 @@ class PortafolioViewSet(viewsets.ModelViewSet):
 
 class IndiceRiesgoViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    API endpoint para consultar el ranking y detalle del Índice de Riesgo País Compuesto (IRPC)[cite: 5].
+    API endpoint para consultar el ranking, detalle, histórico y recálculo 
+    del Índice de Riesgo País Compuesto (IRPC).
     """
-    queryset = IndiceRiesgo.objects.all()
     serializer_class = IndiceRiesgoSerializer
+    permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ['pais', 'nivel_riesgo']
     ordering_fields = ['indice_compuesto', 'fecha_calculo']
+    ordering = ['-indice_compuesto']  # Por defecto ordena de menor riesgo (mayor puntaje) a mayor riesgo
+
+    def get_queryset(self):
+        """
+        Para el listado general (/api/riesgo/), retorna únicamente el cálculo más reciente 
+        de cada país para conformar el ranking vigente.
+        """
+        if self.action == 'list':
+            # Subconsulta para obtener el ID del último registro calculado por cada país
+            ultimos_ids = (
+                IndiceRiesgo.objects.values('pais')
+                .annotate(ultimo_id=models.Max('id'))
+                .values_list('ultimo_id', flat=True)
+            )
+            return IndiceRiesgo.objects.filter(id__in=ultimos_ids).select_related('pais')
+        
+        return IndiceRiesgo.objects.all().select_related('pais').order_by('-fecha_calculo')
+
+    def retrieve(self, request, pk=None):
+        """
+        GET /api/riesgo/{codigo_iso}/
+        Retorna el detalle de riesgo actual de un país junto con su histórico reciente[cite: 6].
+        """
+        ultimo_indice = IndiceRiesgo.objects.filter(pais__codigo_iso__iexact=pk).order_by('-fecha_calculo').first()
+        if not ultimo_indice:
+            return Response(
+                {"error": f"No se encontraron registros de riesgo para el país '{pk}'."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        historico = IndiceRiesgo.objects.filter(pais__codigo_iso__iexact=pk).order_by('-fecha_calculo')[:30]
+        
+        data = self.get_serializer(ultimo_indice).data
+        data['historico'] = self.get_serializer(historico, many=True).data
+        return Response(data)
+
+    @action(detail=True, methods=['get'], url_path='historico')
+    def historico(self, request, pk=None):
+        """
+        GET /api/riesgo/{codigo_iso}/historico/
+        Retorna el histórico de índices de un país con filtro opcional por rango de fechas[cite: 6].
+        """
+        qs = IndiceRiesgo.objects.filter(pais__codigo_iso__iexact=pk).order_by('-fecha_calculo')
+        
+        fecha_inicio = request.query_params.get('fecha_inicio')
+        fecha_fin = request.query_params.get('fecha_fin')
+        if fecha_inicio and fecha_fin:
+            qs = qs.filter(fecha_calculo__date__range=[fecha_inicio, fecha_fin])
+            
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'], url_path='calcular')
+    def calcular(self, request):
+        """
+        POST /api/riesgo/calcular/
+        Dispara el recálculo global del IRPC para todos los países (exclusivo rol ADMIN)[cite: 6].
+        """
+        if getattr(request.user, 'rol', '') != 'ADMIN' and not request.user.is_staff:
+            return Response(
+                {"error": "No tiene permisos suficientes. Solo un administrador puede recalcular el IRPC."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        exito, mensaje = IRPCService.calcular_todos_los_paises(usuario=request.user)
+        if exito:
+            return Response({"mensaje": mensaje}, status=status.HTTP_200_OK)
+        return Response({"error": mensaje}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class AlertaViewSet(viewsets.ModelViewSet):
     """
-    API endpoint para consultar y gestionar las alertas del usuario[cite: 5].
+    API endpoint para consultar, filtrar, marcar como leídas y resumir alertas del usuario[cite: 6].
     """
     serializer_class = AlertaSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ['leida', 'tipo_alerta', 'severidad']
+    ordering = ['-fecha_creacion']
 
     def get_queryset(self):
+        """Retorna alertas dirigidas al usuario autenticado o alertas globales del sistema[cite: 4]."""
         user = self.request.user
-        return Alerta.objects.filter(models.Q(usuario=user) | models.Q(usuario__isnull=True))
+        return Alerta.objects.filter(
+            models.Q(usuario=user) | models.Q(usuario__isnull=True)
+        ).select_related('pais').order_by('-fecha_creacion')
 
     @action(detail=True, methods=['put'], url_path='leer')
     def marcar_como_leida(self, request, pk=None):
+        """PUT /api/alertas/{id}/leer/ - Marca una alerta individual como leída[cite: 6]."""
         alerta = self.get_object()
         alerta.leida = True
         alerta.save()
@@ -154,5 +255,30 @@ class AlertaViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['put'], url_path='leer-todas')
     def marcar_todas_como_leidas(self, request):
-        self.get_queryset().update(leida=True)
+        """PUT /api/alertas/leer-todas/ - Marca todas las alertas pendientes del usuario como leídas[cite: 6]."""
+        self.get_queryset().filter(leida=False).update(leida=True)
         return Response({"status": "Todas las alertas marcadas como leídas"})
+
+    @action(detail=False, methods=['get'], url_path='resumen')
+    def resumen(self, request):
+        """
+        GET /api/alertas/resumen/
+        Retorna el conteo de alertas agrupadas por tipo y severidad[cite: 6].
+        """
+        qs = self.get_queryset()
+        no_leidas = qs.filter(leida=False)
+        
+        return Response({
+            "total": qs.count(),
+            "no_leidas": no_leidas.count(),
+            "por_severidad": {
+                "CRITICAL": no_leidas.filter(severidad='CRITICAL').count(),
+                "WARNING": no_leidas.filter(severidad='WARNING').count(),
+                "INFO": no_leidas.filter(severidad='INFO').count(),
+            },
+            "por_tipo": {
+                "RIESGO": no_leidas.filter(tipo_alerta='RIESGO').count(),
+                "TIPO_CAMBIO": no_leidas.filter(tipo_alerta='TIPO_CAMBIO').count(),
+                "INDICADOR": no_leidas.filter(tipo_alerta='INDICADOR').count(),
+            }
+        })

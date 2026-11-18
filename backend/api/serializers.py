@@ -1,7 +1,28 @@
 from rest_framework import serializers
 from .models import Usuario, Pais, IndicadorEconomico, TipoCambio, Portafolio, Posicion, IndiceRiesgo, Alerta, LogActividad
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Personaliza el payload y la respuesta del login JWT incluyendo datos básicos del usuario.
+    """
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['email'] = user.email
+        token['rol'] = user.rol
+        token['nombre_completo'] = user.nombre_completo
+        return token
 
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data['user'] = {
+            'id': self.user.id,
+            'email': self.user.email,
+            'nombre_completo': self.user.nombre_completo,
+            'rol': self.user.rol,
+        }
+        return data
 class UsuarioSerializer(serializers.ModelSerializer):
     """
     Serializador para la entidad Usuario. Maneja la representación y 
@@ -97,6 +118,8 @@ class AlertaSerializer(serializers.ModelSerializer):
     """
     Serializador para el sistema de alertas automáticas a usuarios.
     """
+    pais_nombre = serializers.ReadOnlyField(source='pais.nombre')
+
     class Meta:
         model = Alerta
         fields = '__all__'
