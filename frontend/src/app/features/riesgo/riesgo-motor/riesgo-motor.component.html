@@ -1,0 +1,145 @@
+<div class="container-fluid px-4 py-4 bg-light min-vh-100">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <h3 class="fw-bold mb-0">Motor IRPC — Índice de Riesgo País Compuesto</h3>
+      <p class="text-muted small mb-0">
+        Ponderación multicriterio: <strong>Económico (40%)</strong> • <strong>Cambiario (35%)</strong> • <strong>Estabilidad (25%)</strong>
+      </p>
+    </div>
+    <button class="btn btn-primary" (click)="recalcular()" [disabled]="calculando()">
+      @if (calculando()) {
+        <span class="spinner-border spinner-border-sm me-2"></span> Calculando...
+      } @else {
+        <i class="bi bi-cpu me-1"></i> Recalcular IRPC Regional
+      }
+    </button>
+  </div>
+
+  @if (mensajeExito()) {
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <i class="bi bi-check-circle-fill me-2"></i> {{ mensajeExito() }}
+      <button type="button" class="btn-close" (click)="mensajeExito.set(null)"></button>
+    </div>
+  }
+
+  @if (errorMsg()) {
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ errorMsg() }}
+      <button type="button" class="btn-close" (click)="errorMsg.set(null)"></button>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="text-muted mt-2 small">Ejecutando lectura del motor cuantitativo...</p>
+    </div>
+  } @else {
+    <!-- Matriz Principal IRPC -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white border-0 pt-3">
+        <h6 class="fw-bold mb-0">Matriz Multidimensional de Riesgo País</h6>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light small text-uppercase">
+            <tr>
+              <th>País</th>
+              <th style="width: 18%;">Económico (40%)</th>
+              <th style="width: 18%;">Cambiario (35%)</th>
+              <th style="width: 18%;">Estabilidad (25%)</th>
+              <th class="text-center">IRPC Final</th>
+              <th class="text-center">Nivel</th>
+              <th class="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of ranking(); track item.id) {
+              <tr [class.table-primary]="seleccionado()?.id === item.id">
+                <td class="fw-bold">{{ item.pais_nombre }}</td>
+                <td>
+                  <div class="d-flex justify-content-between small mb-1">
+                    <span>{{ item.score_economico | number:'1.1-1' }}</span>
+                  </div>
+                  <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-info" [style.width.%]="item.score_economico"></div>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex justify-content-between small mb-1">
+                    <span>{{ item.score_cambiario | number:'1.1-1' }}</span>
+                  </div>
+                  <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-warning" [style.width.%]="item.score_cambiario"></div>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex justify-content-between small mb-1">
+                    <span>{{ item.score_estabilidad | number:'1.1-1' }}</span>
+                  </div>
+                  <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-secondary" [style.width.%]="item.score_estabilidad"></div>
+                  </div>
+                </td>
+                <td class="text-center fs-5 fw-bold text-dark">{{ item.indice_compuesto | number:'1.2-2' }}</td>
+                <td class="text-center">
+                  <span class="badge" [ngClass]="getBadgeClass(item.nivel_riesgo)"
+                    [style.background-color]="item.nivel_riesgo === 'ALTO' ? '#fd7e14' : null">
+                    {{ item.nivel_riesgo }}
+                  </span>
+                </td>
+                <td class="text-end">
+                  <button class="btn btn-sm btn-outline-primary me-1" (click)="verDetalle(item)" title="Ver trazabilidad">
+                    <i class="bi bi-graph-up"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-secondary" (click)="recalcular(item.pais)" [disabled]="calculando()" title="Recalcular país">
+                    <i class="bi bi-arrow-repeat"></i>
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="text-center text-muted py-4">
+                  No hay evaluaciones IRPC aún. Haz clic en <strong>Recalcular IRPC Regional</strong>.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Detalle Técnico y Serie Histórica -->
+    @if (seleccionado(); as sel) {
+      <div class="row g-4">
+        <div class="col-12 col-lg-7">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-3">
+              <h6 class="fw-bold mb-0">Histórico IRPC — {{ sel.pais_nombre }}</h6>
+              <small class="text-muted">Evolución de evaluaciones registradas en el motor</small>
+            </div>
+            <div class="card-body" style="height: 260px;">
+              <canvas baseChart
+                [data]="historicoChartData()"
+                [options]="historicoChartOptions"
+                type="line">
+              </canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-lg-5">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-3">
+              <h6 class="fw-bold mb-0">Trazabilidad del Cálculo — {{ sel.pais_nombre }}</h6>
+              <small class="text-muted">Última ejecución: {{ sel.fecha_calculo | date:'short' }}</small>
+            </div>
+            <div class="card-body">
+              <pre class="bg-dark text-light p-3 rounded small mb-0" style="max-height: 230px; overflow-y: auto;">{{ sel.detalle_calculo | json }}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

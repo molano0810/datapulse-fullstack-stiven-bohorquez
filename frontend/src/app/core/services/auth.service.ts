@@ -23,9 +23,9 @@ export class AuthService {
     login(credentials: { email: string; password: string }): Observable<AuthResponse> {
         return this.http.post<AuthResponse>(`${this.apiUrl}/login/`, credentials).pipe(
             tap((res) => {
-                localStorage.setItem('access_token', res.access);
-                localStorage.setItem('refresh_token', res.refresh);
-                localStorage.setItem('user_data', JSON.stringify(res.user));
+                sessionStorage.setItem('access_token', res.access);
+                sessionStorage.setItem('refresh_token', res.refresh);
+                sessionStorage.setItem('user_data', JSON.stringify(res.user));
                 this.currentUserSignal.set(res.user);
             })
         );
@@ -36,20 +36,20 @@ export class AuthService {
     }
 
     logout(): void {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user_data');
+        sessionStorage.removeItem('access_token');
+        sessionStorage.removeItem('refresh_token');
+        sessionStorage.removeItem('user_data');
         this.currentUserSignal.set(null);
         this.router.navigate(['/login']);
     }
 
     getToken(): string | null {
-        return localStorage.getItem('access_token');
+        return sessionStorage.getItem('access_token');
     }
 
     private getUserFromStorage(): Usuario | null {
-        const token = localStorage.getItem('access_token');
-        const userJson = localStorage.getItem('user_data');
+        const token = sessionStorage.getItem('access_token');
+        const userJson = sessionStorage.getItem('user_data');
         if (!token || !userJson || userJson === 'undefined') return null;
         try {
             return JSON.parse(userJson);
