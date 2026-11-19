@@ -1,1 +1,189 @@
-<p>dashboard-home works!</p>
+<div class="container-fluid px-4 py-4 bg-light min-vh-100">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="fw-bold mb-0">Panel Ejecutivo Regional</h3>
+      <p class="text-muted small mb-0">Monitoreo macroeconómico, riesgo país (IRPC) y exposición de capital en Latinoamérica</p>
+    </div>
+    <button class="btn btn-outline-primary btn-sm" (click)="cargarDatos()" [disabled]="loading()">
+      <i class="bi bi-arrow-clockwise me-1"></i> Actualizar datos
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="text-muted mt-2 small">Cargando inteligencia económica...</p>
+    </div>
+  } @else if (errorMsg()) {
+    <div class="alert alert-danger d-flex align-items-center" role="alert">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i>
+      <div>{{ errorMsg() }}</div>
+    </div>
+  } @else if (resumen(); as data) {
+    <!-- Fila 1: Tarjetas KPI -->
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-sm-6 col-xl">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="text-muted small fw-semibold text-uppercase">Países Monitoreados</div>
+            <div class="fs-2 fw-bold text-dark mt-1">{{ data.kpis.paises_monitoreados }}</div>
+            <span class="badge bg-primary-subtle text-primary small">Economías Latam</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-xl">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="text-muted small fw-semibold text-uppercase">IRPC Promedio</div>
+            <div class="fs-2 fw-bold text-primary mt-1">{{ data.kpis.irpc_promedio_regional | number:'1.1-2' }}</div>
+            <span class="text-muted small">Escala 0 (bajo) - 100 (crítico)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-xl">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="text-muted small fw-semibold text-uppercase">Portafolios Activos</div>
+            <div class="fs-2 fw-bold text-dark mt-1">{{ data.kpis.portafolios_activos }}</div>
+            <a routerLink="/portafolios" class="small text-decoration-none">Ver portafolios &rarr;</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-xl">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="text-muted small fw-semibold text-uppercase">Capital Invertido</div>
+            <div class="fs-2 fw-bold text-success mt-1">${{ data.kpis.capital_total_invertido_usd | number:'1.0-0' }}</div>
+            <span class="text-muted small">USD bajo gestión</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-xl">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="text-muted small fw-semibold text-uppercase">Alertas Pendientes</div>
+            <div class="fs-2 fw-bold text-danger mt-1">{{ data.kpis.alertas_pendientes }}</div>
+            <a routerLink="/alertas" class="small text-decoration-none text-danger">Revisar centro &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fila 2: Países Destacados -->
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-md-6">
+        <div class="card border-0 shadow-sm border-start border-success border-4">
+          <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+              <span class="badge bg-success-subtle text-success mb-1">Menor Riesgo Regional</span>
+              <h5 class="fw-bold mb-0">{{ data.destacados.menor_riesgo?.pais || 'Sin datos' }}</h5>
+              <small class="text-muted">Código ISO: {{ data.destacados.menor_riesgo?.codigo_iso || '-' }}</small>
+            </div>
+            <div class="text-end">
+              <div class="fs-3 fw-bold text-success">{{ data.destacados.menor_riesgo?.irpc | number:'1.1-2' }}</div>
+              <small class="text-muted">Score IRPC</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <div class="card border-0 shadow-sm border-start border-danger border-4">
+          <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+              <span class="badge bg-danger-subtle text-danger mb-1">Mayor Riesgo Regional</span>
+              <h5 class="fw-bold mb-0">{{ data.destacados.mayor_riesgo?.pais || 'Sin datos' }}</h5>
+              <small class="text-muted">Código ISO: {{ data.destacados.mayor_riesgo?.codigo_iso || '-' }}</small>
+            </div>
+            <div class="text-end">
+              <div class="fs-3 fw-bold text-danger">{{ data.destacados.mayor_riesgo?.irpc | number:'1.1-2' }}</div>
+              <small class="text-muted">Score IRPC</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fila 3: Gráficas Chart.js -->
+    <div class="row g-4 mb-4">
+      <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-white border-0 pt-3 pb-0">
+            <h6 class="fw-bold mb-0">Comparativa Regional de Riesgo País (IRPC)</h6>
+            <small class="text-muted">Ordenado por índice compuesto actual</small>
+          </div>
+          <div class="card-body" style="height: 320px;">
+            <canvas baseChart
+              [data]="barData()"
+              [options]="barOptions"
+              type="bar">
+            </canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-white border-0 pt-3 pb-0">
+            <h6 class="fw-bold mb-0">Distribución por Nivel de Riesgo</h6>
+            <small class="text-muted">Clasificación de economías activas</small>
+          </div>
+          <div class="card-body" style="height: 320px;">
+            <canvas baseChart
+              [data]="doughnutData()"
+              [options]="doughnutOptions"
+              type="doughnut">
+            </canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fila 4: Tabla Resumen Ranking -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white border-0 pt-3 d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0">Ranking de Riesgo País (IRPC)</h6>
+        <a routerLink="/riesgo" class="btn btn-sm btn-outline-secondary">Ir al Motor IRPC</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light small text-uppercase">
+            <tr>
+              <th>País</th>
+              <th class="text-center">Económico (40%)</th>
+              <th class="text-center">Cambiario (35%)</th>
+              <th class="text-center">Estabilidad (25%)</th>
+              <th class="text-center">IRPC Compuesto</th>
+              <th class="text-center">Nivel</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of ranking(); track item.id) {
+              <tr>
+                <td class="fw-semibold">{{ item.pais_nombre }}</td>
+                <td class="text-center">{{ item.score_economico | number:'1.1-1' }}</td>
+                <td class="text-center">{{ item.score_cambiario | number:'1.1-1' }}</td>
+                <td class="text-center">{{ item.score_estabilidad | number:'1.1-1' }}</td>
+                <td class="text-center fw-bold">{{ item.indice_compuesto | number:'1.2-2' }}</td>
+                <td class="text-center">
+                  <span class="badge" [ngClass]="getBadgeClass(item.nivel_riesgo)"
+                    [style.background-color]="item.nivel_riesgo === 'ALTO' ? '#fd7e14' : null">
+                    {{ item.nivel_riesgo }}
+                  </span>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="text-center text-muted py-4">No hay cálculos de riesgo registrados aún.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>
