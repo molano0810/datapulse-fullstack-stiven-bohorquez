@@ -4,9 +4,15 @@
       <h3 class="fw-bold mb-0">Portafolios de Inversión & Simulador</h3>
       <p class="text-muted small mb-0">Gestión de posiciones por país, exportación CSV y simulación de estrés cambiario/IRPC</p>
     </div>
-    <button class="btn btn-primary" (click)="mostrarFormPortafolio.set(!mostrarFormPortafolio())">
-      <i class="bi bi-plus-lg me-1"></i> Nuevo Portafolio
-    </button>
+    @if (authService.canEditPortfolios()) {
+      <button class="btn btn-primary" (click)="mostrarFormPortafolio.set(!mostrarFormPortafolio())">
+        <i class="bi bi-plus-lg me-1"></i> Nuevo Portafolio
+      </button>
+    } @else {
+      <span class="badge bg-secondary-subtle text-secondary border px-3 py-2">
+        <i class="bi bi-eye me-1"></i> Modo Solo Lectura (VIEWER)
+      </span>
+    }
   </div>
 
   @if (mensajeExito()) {
@@ -123,9 +129,11 @@
                   <i class="bi bi-file-earmark-spreadsheet me-1"></i>
                   {{ exportando() ? 'Exportando...' : 'Exportar CSV' }}
                 </button>
-                <button class="btn btn-primary btn-sm" (click)="mostrarFormPosicion.set(!mostrarFormPosicion())">
-                  <i class="bi bi-plus-circle me-1"></i> Agregar Posición
-                </button>
+                @if (authService.canEditPortfolios()) {
+                  <button class="btn btn-primary btn-sm" (click)="mostrarFormPosicion.set(!mostrarFormPosicion())">
+                    <i class="bi bi-plus-circle me-1"></i> Agregar Posición
+                  </button>
+                }
               </div>
             </div>
           </div>
@@ -215,6 +223,7 @@
           </div>
 
           <!-- Simulador de Escenarios IRPC & Tipo de Cambio -->
+          @if (authService.canEditPortfolios()) {
           <div class="card border-0 shadow-sm">
             <div class="card-header bg-dark text-white pt-3">
               <h6 class="fw-bold mb-0"><i class="bi bi-sliders me-2"></i>Simulador de Escenarios Macroeconómicos</h6>
@@ -312,6 +321,7 @@
               }
             </div>
           </div>
+          }
         }
       </div>
     </div>

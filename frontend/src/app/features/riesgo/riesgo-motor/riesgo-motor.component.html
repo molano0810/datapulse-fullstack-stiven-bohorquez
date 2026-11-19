@@ -6,13 +6,15 @@
         Ponderación multicriterio: <strong>Económico (40%)</strong> • <strong>Cambiario (35%)</strong> • <strong>Estabilidad (25%)</strong>
       </p>
     </div>
-    <button class="btn btn-primary" (click)="recalcular()" [disabled]="calculando()">
-      @if (calculando()) {
-        <span class="spinner-border spinner-border-sm me-2"></span> Calculando...
-      } @else {
-        <i class="bi bi-cpu me-1"></i> Recalcular IRPC Regional
-      }
-    </button>
+    @if (authService.isAdmin()) {
+  <button class="btn btn-primary" (click)="recalcular()" [disabled]="calculando()">
+        @if (calculando()) {
+          <span class="spinner-border spinner-border-sm me-2"></span> Calculando...
+        } @else {
+          <i class="bi bi-cpu me-1"></i> Recalcular IRPC Regional
+        }
+      </button>
+    }
   </div>
 
   @if (mensajeExito()) {
@@ -92,9 +94,11 @@
                   <button class="btn btn-sm btn-outline-primary me-1" (click)="verDetalle(item)" title="Ver trazabilidad">
                     <i class="bi bi-graph-up"></i>
                   </button>
-                  <button class="btn btn-sm btn-outline-secondary" (click)="recalcular(item.pais)" [disabled]="calculando()" title="Recalcular país">
-                    <i class="bi bi-arrow-repeat"></i>
-                  </button>
+                  @if (authService.isAdmin()) {
+                    <button class="btn btn-sm btn-outline-secondary" (click)="recalcular(item.pais)" [disabled]="calculando()" title="Recalcular país">
+                      <i class="bi bi-arrow-repeat"></i>
+                    </button>
+                  }
                 </td>
               </tr>
             } @empty {

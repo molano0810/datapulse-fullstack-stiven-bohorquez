@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
 import { ApiService } from '../../../core/services/api.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { IndiceRiesgo } from '../../../core/models/api.models';
 
 @Component({
@@ -13,6 +14,7 @@ import { IndiceRiesgo } from '../../../core/models/api.models';
 })
 export class RiesgoMotorComponent implements OnInit {
   private apiService = inject(ApiService);
+  public authService = inject(AuthService);
 
   ranking = signal<IndiceRiesgo[]>([]);
   seleccionado = signal<IndiceRiesgo | null>(null);

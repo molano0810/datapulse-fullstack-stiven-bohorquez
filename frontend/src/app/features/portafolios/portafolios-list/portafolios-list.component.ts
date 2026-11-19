@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Pais, Portafolio } from '../../../core/models/api.models';
 
 @Component({
@@ -13,6 +14,7 @@ import { Pais, Portafolio } from '../../../core/models/api.models';
 })
 export class PortafoliosListComponent implements OnInit {
   private apiService = inject(ApiService);
+  public authService = inject(AuthService);
 
   portafolios = signal<Portafolio[]>([]);
   paises = signal<Pais[]>([]);
