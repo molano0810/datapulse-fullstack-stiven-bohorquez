@@ -6,6 +6,14 @@
     "analytics": "a49eb4f7-1330-494c-b0a0-1934bc4bc65b"
   },
   "newProjectRoot": "projects",
+  "schematics": {
+    "@schematics/angular:component": {
+      "type": "component"
+    },
+    "@schematics/angular:service": {
+      "type": "service"
+    }
+  },
   "projects": {
     "frontend": {
       "projectType": "application",
