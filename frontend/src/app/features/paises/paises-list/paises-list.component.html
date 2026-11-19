@@ -20,25 +20,25 @@
             <h6 class="fw-bold mb-0">Economías Monitoreadas ({{ paises().length }})</h6>
           </div>
           <div class="list-group list-group-flush">
-            @for (pais of paises(); track pais.id) {
+            @for (pais of paises(); track pais.codigo_iso) {
               <button
                 type="button"
                 class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3"
-                [class.active]="paisSeleccionado()?.id === pais.id"
+                [class.active]="paisSeleccionado()?.codigo_iso === pais.codigo_iso"
                 (click)="seleccionarPais(pais)">
                 <div>
                   <div class="fw-bold">
                     <span class="badge me-2"
-                      [class.bg-light]="paisSeleccionado()?.id === pais.id"
-                      [class.text-dark]="paisSeleccionado()?.id === pais.id"
-                      [class.bg-primary-subtle]="paisSeleccionado()?.id !== pais.id"
-                      [class.text-primary]="paisSeleccionado()?.id !== pais.id">
+                      [class.bg-light]="paisSeleccionado()?.codigo_iso === pais.codigo_iso"
+                      [class.text-dark]="paisSeleccionado()?.codigo_iso === pais.codigo_iso"
+                      [class.bg-primary-subtle]="paisSeleccionado()?.codigo_iso !== pais.codigo_iso"
+                      [class.text-primary]="paisSeleccionado()?.codigo_iso !== pais.codigo_iso">
                       {{ pais.codigo_iso }}
                     </span>
                     {{ pais.nombre }}
                   </div>
-                  <small [class.text-white-50]="paisSeleccionado()?.id === pais.id"
-                         [class.text-muted]="paisSeleccionado()?.id !== pais.id">
+                  <small [class.text-white-50]="paisSeleccionado()?.codigo_iso === pais.codigo_iso"
+                         [class.text-muted]="paisSeleccionado()?.codigo_iso !== pais.codigo_iso">
                     {{ pais.region }} • Moneda: {{ pais.moneda_codigo }}
                   </small>
                 </div>

@@ -17,7 +17,6 @@ export interface AuthResponse {
 }
 
 export interface Pais {
-    id: number;
     codigo_iso: string;
     nombre: string;
     region: string;
@@ -29,7 +28,7 @@ export interface Pais {
 
 export interface IndicadorEconomico {
     id: number;
-    pais: number;
+    pais: string;
     pais_nombre: string;
     tipo: string;
     anio: number;
@@ -49,7 +48,7 @@ export interface TipoCambio {
 
 export interface IndiceRiesgo {
     id: number;
-    pais: number;
+    pais: string;
     pais_nombre: string;
     fecha_calculo: string;
     score_economico: number;
@@ -63,7 +62,7 @@ export interface IndiceRiesgo {
 
 export interface Alerta {
     id: number;
-    pais: number | null;
+    pais: string | null;
     pais_nombre?: string;
     tipo_alerta: string;
     severidad: SeveridadAlerta;
@@ -76,9 +75,9 @@ export interface Alerta {
 export interface Posicion {
     id?: number;
     portafolio?: number;
-    pais: number;
+    pais: string;
     pais_nombre?: string;
-    sector: string;
+    tipo_activo: string;
     monto_inversion_usd: number;
     fecha_entrada: string;
     fecha_salida?: string | null;

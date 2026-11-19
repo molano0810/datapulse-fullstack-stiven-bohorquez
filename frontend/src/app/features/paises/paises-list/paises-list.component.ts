@@ -82,8 +82,8 @@ export class PaisesListComponent implements OnInit {
     this.filtroTipo.set('');
 
     forkJoin({
-      indicadores: this.apiService.getPaisIndicadores(pais.id).pipe(catchError(() => of([]))),
-      tiposCambio: this.apiService.getPaisTipoCambio(pais.id).pipe(catchError(() => of([])))
+      indicadores: this.apiService.getPaisIndicadores(pais.codigo_iso).pipe(catchError(() => of([]))),
+      tiposCambio: this.apiService.getPaisTipoCambio(pais.codigo_iso).pipe(catchError(() => of([])))
     }).subscribe({
       next: ({ indicadores, tiposCambio }) => {
         const listaInd = Array.isArray(indicadores) ? indicadores : (indicadores as any).results || [];

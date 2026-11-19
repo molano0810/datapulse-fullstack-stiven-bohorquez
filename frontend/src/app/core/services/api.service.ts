@@ -29,17 +29,17 @@ export class ApiService {
         return this.http.get<Pais[]>(`${this.baseUrl}/paises/`);
     }
 
-    getPaisDetalle(id: number): Observable<Pais> {
+    getPaisDetalle(id: string | number): Observable<Pais> {
         return this.http.get<Pais>(`${this.baseUrl}/paises/${id}/`);
     }
 
-    getPaisIndicadores(paisId: number, tipo?: string): Observable<IndicadorEconomico[]> {
+    getPaisIndicadores(paisId: string | number, tipo?: string): Observable<IndicadorEconomico[]> {
         let params = new HttpParams();
         if (tipo) params = params.set('tipo', tipo);
         return this.http.get<IndicadorEconomico[]>(`${this.baseUrl}/paises/${paisId}/indicadores/`, { params });
     }
 
-    getPaisTipoCambio(paisId: number): Observable<TipoCambio[]> {
+    getPaisTipoCambio(paisId: string | number): Observable<TipoCambio[]> {
         return this.http.get<TipoCambio[]>(`${this.baseUrl}/paises/${paisId}/tipo-cambio/`);
     }
 
@@ -48,11 +48,11 @@ export class ApiService {
         return this.http.get<IndiceRiesgo[]>(`${this.baseUrl}/riesgo/`);
     }
 
-    getRiesgoHistorico(id: number): Observable<IndiceRiesgo[]> {
+    getRiesgoHistorico(id: string | number): Observable<IndiceRiesgo[]> {
         return this.http.get<IndiceRiesgo[]>(`${this.baseUrl}/riesgo/${id}/historico/`);
     }
 
-    recalcularRiesgo(paisId?: number): Observable<any> {
+    recalcularRiesgo(paisId?: string): Observable<any> {
         const body = paisId ? { pais_id: paisId } : {};
         return this.http.post<any>(`${this.baseUrl}/riesgo/calcular/`, body);
     }
@@ -62,7 +62,7 @@ export class ApiService {
         return this.http.get<Portafolio[]>(`${this.baseUrl}/portafolios/`);
     }
 
-    getPortafolioDetalle(id: number): Observable<Portafolio> {
+    getPortafolioDetalle(id: string | number): Observable<Portafolio> {
         return this.http.get<Portafolio>(`${this.baseUrl}/portafolios/${id}/`);
     }
 
@@ -93,12 +93,12 @@ export class ApiService {
         return this.http.get<any>(`${this.baseUrl}/alertas/resumen/`);
     }
 
-    marcarAlertaLeida(id: number): Observable<any> {
-        return this.http.post<any>(`${this.baseUrl}/alertas/${id}/leer/`, {});
+    marcarAlertaLeida(id: string | number): Observable<any> {
+        return this.http.put<any>(`${this.baseUrl}/alertas/${id}/leer/`, {});
     }
 
     marcarTodasAlertasLeidas(): Observable<any> {
-        return this.http.post<any>(`${this.baseUrl}/alertas/leer-todas/`, {});
+        return this.http.put<any>(`${this.baseUrl}/alertas/leer-todas/`, {});
     }
 
   // --- Auditoría ---

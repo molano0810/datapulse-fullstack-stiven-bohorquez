@@ -62,7 +62,7 @@ export class RiesgoMotorComponent implements OnInit {
     });
   }
 
-  recalcular(paisId?: number): void {
+  recalcular(paisId?: string): void {
     this.calculando.set(true);
     this.mensajeExito.set(null);
     this.errorMsg.set(null);
@@ -89,7 +89,7 @@ export class RiesgoMotorComponent implements OnInit {
   verDetalle(item: IndiceRiesgo): void {
     this.seleccionado.set(item);
 
-    this.apiService.getRiesgoHistorico(item.id).subscribe({
+    this.apiService.getRiesgoHistorico(item.pais).subscribe({
       next: (resp) => {
         const lista = Array.isArray(resp) ? resp : (resp as any).results || [];
         this.historico.set(lista);
