@@ -59,7 +59,7 @@ class Command(BaseCommand):
             {'codigo_iso': 'PE', 'nombre': 'Perú', 'moneda_codigo': 'PEN', 'moneda_nombre': 'Sol Peruano', 'region': 'ANDINA', 'latitud': -9.1900, 'longitud': -75.0152, 'poblacion': 33300000},
             {'codigo_iso': 'EC', 'nombre': 'Ecuador', 'moneda_codigo': 'USD', 'moneda_nombre': 'Dólar Estadounidense', 'region': 'ANDINA', 'latitud': -1.8312, 'longitud': -78.1834, 'poblacion': 17800000},
             {'codigo_iso': 'UY', 'nombre': 'Uruguay', 'moneda_codigo': 'UYU', 'moneda_nombre': 'Peso Uruguayo', 'region': 'CONO_SUR', 'latitud': -32.5228, 'longitud': -55.7658, 'poblacion': 3426000},
-            {'codigo_iso': 'CR', 'nombre': 'Costa Rica', 'moneda_codigo': 'CRC', 'moneda_nombre': 'Colón Costarricense', 'region': 'CENTROAMERICA', 'latitud': 9.7489, 'longitud': -83.7534, 'poblacion': 5154000},
+            {'codigo_iso': 'PY', 'nombre': 'Paraguay', 'moneda_codigo': 'PYG', 'moneda_nombre': 'Guaraní Paraguayo', 'region': 'CONO_SUR', 'latitud': -23.4425, 'longitud': -58.4438, 'poblacion': 6781000},
             {'codigo_iso': 'PA', 'nombre': 'Panamá', 'moneda_codigo': 'PAB', 'moneda_nombre': 'Balboa Panameño', 'region': 'CENTROAMERICA', 'latitud': 8.5379, 'longitud': -80.7821, 'poblacion': 4404000},
         ]
 

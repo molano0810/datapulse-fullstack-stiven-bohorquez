@@ -38,8 +38,12 @@ class ExternalDataSyncService:
             'NY.GDP.MKTP.CD': 'PIB',
             'FP.CPI.TOTL.ZG': 'INFLACION',
             'SL.UEM.TOTL.ZS': 'DESEMPLEO',
+            'NE.RSB.GNFS.ZS': 'BALANZA_COMERCIAL',
+            'GC.DOD.TOTL.GD.ZS': 'DEUDA_PIB',
+            'NY.GDP.PCAP.CD': 'PIB_PERCAPITA',
         }
-        
+        unidades = {'PIB': 'USD_MILES_MILLONES', 'PIB_PERCAPITA': 'USD'}
+
         sincronizados_count = 0
 
         try:
@@ -77,7 +81,7 @@ class ExternalDataSyncService:
                                             anio=int(anio),
                                             defaults={
                                                 'valor': round(valor_final, 4),
-                                                'unidad': 'USD_MILES_MILLONES' if local_type == 'PIB' else 'PORCENTAJE',
+                                                'unidad': unidades.get(local_type, 'PORCENTAJE'),
                                                 'fuente': 'WORLD_BANK'
                                             }
                                         )
@@ -142,7 +146,7 @@ class ExternalDataSyncService:
                         tasa_registro = 1.0 / tasa_usd if moneda != 'USD' and tasa_usd > 0 else 1.0
 
                         # Buscamos el registro anterior para calcular la variación porcentual
-                        ultimo_cambio = TipoCambio.objects.filter(moneda_origen=moneda).order_by('-fecha').first()
+                        ultimo_cambio = TipoCambio.objects.filter(moneda_origen=moneda, fecha__lt=fecha_actual).order_by('-fecha').first()
                         variacion = 0.0
                         
                         if ultimo_cambio and ultimo_cambio.tasa > 0:

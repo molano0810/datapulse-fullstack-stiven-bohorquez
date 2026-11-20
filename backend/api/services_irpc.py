@@ -192,7 +192,7 @@ class IRPCService:
                 penalizaciones['volatilidad'] = -10
 
             # Análisis de tendencia (Depreciación acumulada en el periodo)
-            depreciacion = sum(variaciones)
+            depreciacion = -sum(variaciones)
             if depreciacion > 10:
                 score -= 30
                 penalizaciones['depreciacion'] = -30

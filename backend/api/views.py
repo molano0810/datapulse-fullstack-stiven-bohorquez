@@ -98,7 +98,7 @@ class PaisViewSet(viewsets.ReadOnlyModelViewSet):
     def tipo_cambio(self, request, pk=None):
         """Retorna el histórico de tipo de cambio de la moneda del país[cite: 4]."""
         pais = self.get_object()
-        historico = TipoCambio.objects.filter(moneda_origen=pais.moneda_codigo)
+        historico = TipoCambio.objects.filter(moneda_origen=pais.moneda_codigo).order_by('-fecha')
         
         fecha_inicio = request.query_params.get('fecha_inicio')
         fecha_fin = request.query_params.get('fecha_fin')
@@ -190,7 +190,7 @@ class PortafolioViewSet(viewsets.ModelViewSet):
             detalle_posiciones.append({
                 'pais': pos.pais.nombre,
                 'codigo_iso': pos.pais.codigo_iso,
-                'sector': pos.sector,
+                'tipo_activo': pos.tipo_activo,
                 'monto_actual_usd': monto,
                 'monto_proyectado_usd': monto_proyectado,
                 'variacion_estimada_usd': round(monto_proyectado - monto, 2),
@@ -229,14 +229,14 @@ class PortafolioViewSet(viewsets.ModelViewSet):
         response['Content-Disposition'] = f'attachment; filename="portafolio_{portafolio.id}_{portafolio.nombre}.csv"'
 
         writer = csv.writer(response)
-        writer.writerow(['Portafolio', 'Pais', 'Codigo ISO', 'Sector', 'Monto Inversion (USD)', 'Fecha Entrada', 'Fecha Salida', 'Notas'])
+        writer.writerow(['Portafolio', 'Pais', 'Codigo ISO', 'Tipo de Activo', 'Monto Inversion (USD)', 'Fecha Entrada', 'Fecha Salida', 'Notas'])
 
         for pos in posiciones:
             writer.writerow([
                 portafolio.nombre,
                 pos.pais.nombre,
                 pos.pais.codigo_iso,
-                pos.sector,
+                pos.tipo_activo,
                 pos.monto_inversion_usd,
                 pos.fecha_entrada,
                 pos.fecha_salida or 'Activa',
