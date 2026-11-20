@@ -12,7 +12,7 @@ Aplicación web **Fullstack** desarrollada con **Django REST Framework** y **Ang
 | **Frontend (Alias alternativo)** | Vercel | https://datapulse-fullstack-stiven-bohorquez-molano1.vercel.app |
 | **Backend API REST (Django + DRF)** | Render | https://datapulse-fullstack-stiven-bohorquez.onrender.com/api/ |
 | **Panel Administrativo Django** | Render | https://datapulse-fullstack-stiven-bohorquez.onrender.com/admin/ |
-| **Video Demostrativo (5–8 min)** | Youtube | [*Pegar aquí el enlace de Loom / YouTube / Google Drive* ](https://youtu.be/5VbLPMW0hiI?si=jIUXYVzyFV9DImDV) |
+| **Video Demostrativo (5–8 min)** | Youtube | https://youtu.be/5VbLPMW0hiI?si=jIUXYVzyFV9DImDV |
 
 > **Nota sobre arranque en frío (Render Free Tier):** Si el servicio backend lleva más de 15 minutos sin tráfico, la primera petición puede tardar ~30–40 segundos mientras la instancia se activa.
 
