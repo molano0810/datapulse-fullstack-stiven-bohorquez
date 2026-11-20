@@ -292,7 +292,7 @@
                     <thead class="table-light small">
                       <tr>
                         <th>País</th>
-                        <th>Sector</th>
+                        <th>Tipo de Activo</th>
                         <th class="text-end">Actual (USD)</th>
                         <th class="text-end">Proyectado (USD)</th>
                         <th class="text-end">Variación</th>
@@ -303,7 +303,7 @@
                       @for (det of sim.detalle; track $index) {
                         <tr>
                           <td class="fw-semibold">{{ det.pais }} ({{ det.codigo_iso }})</td>
-                          <td>{{ det.sector }}</td>
+                          <td>{{ det.tipo_activo }}</td>
                           <td class="text-end">${{ det.monto_actual_usd | number:'1.2-2' }}</td>
                           <td class="text-end fw-bold">${{ det.monto_proyectado_usd | number:'1.2-2' }}</td>
                           <td class="text-end" [class.text-success]="det.variacion_estimada_usd >= 0" [class.text-danger]="det.variacion_estimada_usd < 0">

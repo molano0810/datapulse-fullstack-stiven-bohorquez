@@ -176,20 +176,10 @@ export class PortafoliosListComponent implements OnInit {
 
     this.apiService.simularPortafolio(port.id, this.simParams).subscribe({
       next: (resp) => {
-        const detalle = resp.detalle_posiciones || [];
-        const totalInvertido =
-          resp.total_invertido_usd ??
-          resp.total_invertido ??
-          detalle.reduce((acc: number, d: any) => acc + Number(d.monto_actual_usd || 0), 0);
-        const valorProyectado =
-          resp.valor_proyectado_usd ??
-          resp.valor_proyectado ??
-          detalle.reduce((acc: number, d: any) => acc + Number(d.monto_proyectado_usd || 0), 0);
-        const irpcPonderado =
-          resp.irpc_ponderado ??
-          (totalInvertido > 0
-            ? detalle.reduce((acc: number, d: any) => acc + Number(d.monto_actual_usd || 0) * Number(d.irpc_pais || 0), 0) / totalInvertido
-            : 0);
+        const detalle = resp.posiciones || [];
+        const totalInvertido = resp.resumen?.total_invertido_usd ?? 0;
+        const valorProyectado = resp.resumen?.valor_proyectado_usd ?? 0;
+        const irpcPonderado = resp.resumen?.irpc_ponderado_portafolio ?? 0;
 
         this.resultadoSimulacion.set({
           totalInvertido,
